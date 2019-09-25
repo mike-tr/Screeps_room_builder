@@ -1,25 +1,30 @@
 class buildingPlacement{
-    constructor(buildings){
-        this.labs = [];
-        this.buildings = buildings.reverse();
+    constructor(map){
+        this.buildings = {};
+        this.open = nap.buildings.reverse();
     }
 
-    check_in_radius2(skip){
-        for(let i in this.buildings){
+    check_in_radius(overlaps, skip, radius, count, type){
+        for(let i in this.open){
             if(skip > 0){
                 skip--;
                 continue;
             }
-            let tile = this.buildings[i];
-            let arr = this.sort(this.buildings, tile, 2);
-            if(arr.length >= 10){
-                let v = this.check_2o(arr, 2);
+            let tile = this.open[i];
+            if(tile.building && tile.building != type)
+                continue;
+            let arr = this.sort(this.open, tile, radius, type);
+            if(arr.length >= count){
+                let v = this.check_overload(overlaps, arr, radius, count);
                 if(v){
-                    console.log('found one!', JSON.stringify(v));
-                    for(let i in arr){
-                        console.log(JSON.stringify(arr[i]))
+                    v = v.slice(0, count);
+                    for(let i in v){
+                        v[i].building = type;
+                        let id = this.open.indexOf(v[i]);
+                        this.open.splice(id, 1);
                     }
-                    return arr;
+                    this.buildings[type] = v;
+                    return v;
                 }
                 //console.log('found one!', JSON.stringify(tile));
             }
@@ -28,36 +33,52 @@ class buildingPlacement{
         return null;
     }
 
-    check_2o(arr, range){
-        let first = arr.shift();
-        let s2 = null;
-        for(let i in arr){
-            let tile = arr[i];
-            let arr2 = this.sort(arr, tile, range);
-            if(arr2.length >= 9){
-                //console.log('found one!', JSON.stringify(tile));
-                s2 = arr2[0];
+    check_overload(times, arr, radius, count){
+        for(let i = 0; i < times; i++){
+            if(arr){
+                arr = this.check_more_connections(times, arr, radius, count);
             }
         }
-        arr.unshift(first);
-        return s2;
+        return arr;
     }
 
-    sort(arr, tile, r){
+    check_more_connections(skip, arr, range, count){
+        let first = arr[0];
+        for(let i in arr){
+            if(skip > 0){
+                skip--;
+                continue;
+            }
+            let tile = arr[i];
+            let arr2 = this.sort(arr, tile, range);
+            if(arr2.length >= count){
+                arr2 = arr2.sort((a) => this.tile_distance(a, first));
+                return arr2;
+            }
+        }
+        return null;
+    }
+
+    sort(arr, tile, r, type){
         let ret = [];
         ret.push(tile);
         for(let i in arr){
             let t = arr[i];
             
-            if(t == tile)
+            if(t == tile || (t.building && t.building != type)) 
                 continue;
-            let d = this.sdist(tile, t);
+            let d = this.tile_distance(t, tile);
             if(d <= r){
+                t.range = d;
                 ret.push(t);
             }
         }
         //console.log(ret.length);
         return ret;
+    }
+
+    tile_distance(tileA, tileB){
+        return (tileA.x - tileB.x) ** 2 + (tileA.y - tileB.y) ** 2;
     }
 
     sdist(tilea, tileb){
@@ -70,6 +91,6 @@ class buildingPlacement{
 }
 
 
-module.exports = function(buildings){
-    return new buildingPlacement(buildings);
+module.exports = function(open){
+    return new buildingPlacement(open);
 }

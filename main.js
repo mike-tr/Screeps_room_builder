@@ -15,7 +15,7 @@ const types = {
 }
 
 const t_t = {
-    spawn : {fill: 'yellow', radius: 0.55, stroke: 'black'},
+    spawn : {fill: 'yellow', radius: 0.65, stroke: 'black'},
     extension : {fill: 'yellow', radius: 0.25, stroke: 'black'},
     lab : {fill: 'black', radius: 0.4, stroke: 'white'}, 
     link : {fill: 'blue', radius: 0.25, stroke: 'white'}, 
@@ -24,6 +24,7 @@ const t_t = {
     terminal : {fill: 'white', radius: 0.45, stroke: 'black'}, 
     tower : {fill: 'red', radius: 0.33, stroke: 'white'}, 
     powerSpawn : {fill: 'red', radius: 0.55, stroke: 'black'},
+    holder : {fill: 'white', radius: 0.33, stroke: 'blue'},
 }
 
 
@@ -33,6 +34,10 @@ class wpos {
         this.y = y;
         this.type = type;
         this.cube = cube;
+    }
+
+    draw_structure(room){
+        room.visual.circle(this.x, this.y, t_t[this.type]);
     }
 
     draw(room){
@@ -153,15 +158,21 @@ module.exports.loop = function () {
         }
         test.set_buildings_count(87);
         time += new Date().getTime() - t;
-        
-        let bp = build_place(test.get_building_list());
-        bp.check_in_radius2();
+        console.log(time, 'generator');
+
+        t = new Date().getTime();
+        let bp = build_place(test.get_map_object());
+        bp.check_in_radius(1, 8, 5, 10, STRUCTURE_LAB);
+        bp.check_in_radius(0, 0, 3, 4, "holder");
+        bp.check_in_radius(0, 0, 22, 6, STRUCTURE_TOWER);
+        console.log(new Date().getTime() - t, 'bp!');
+
+        console.log(bp.buildings[STRUCTURE_LAB].length);
 
         console.log(JSON.stringify(test.get_tile_word(18, 26)));
         //test.add_tile_world(17, 28);
         console.log(JSON.stringify(test.get_tile_word(17, 16)));
         console.log(test.buildings.length, 'buildings!');
-        console.log(time);
         test.calculateMap();
         for(let j in test.map){
             let p = test.map[j];
@@ -169,10 +180,10 @@ module.exports.loop = function () {
             if(p.contacts > 0 && t > 0){
                 t = 7
             }
-            let d = new wpos(p.x, p.y, p.type);
-            d.draw(room);
-            d = new wpos(p.x, p.y, p.range);
-            d.draw(room);
+            //let d = new wpos(p.x, p.y, p.type);
+            //d.draw(room);
+            let d = new wpos(p.x, p.y, p.building);
+            d.draw_structure(room);
         }
     }
     

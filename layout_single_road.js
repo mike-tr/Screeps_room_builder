@@ -8,6 +8,7 @@ class get_freeSpace {
 
         this.base = { x : x, y : y };
         this.buildings = [];
+        this.roads = [];
         this.corners = [];
 
         this.base_arr = [];
@@ -36,12 +37,14 @@ class get_freeSpace {
         this.init = true;
     }
 
-    get_building_list(){
+    get_map_object(){
+        let obj = {}
         let arr = [];
         for(let i of this.buildings){
             arr.push(this.map[i]);
         }
-        return arr;
+        obj.buildings = arr;
+        return obj;
     }
 
     set_center(x, y, room){
