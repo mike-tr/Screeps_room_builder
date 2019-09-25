@@ -27,3 +27,7 @@ as well as the 'type' variable.
 type = range to walls.
 so type - 5 would be
 this tile is a center of 5x5 grid without walls. 
+
+
+all other scripts ARE JUNK,
+feel free to use as you see fit.
