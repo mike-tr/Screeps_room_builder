@@ -15,32 +15,32 @@ const types = {
 }
 
 const t_t = {
-    1 : STRUCTURE_SPAWN,
-    2 : STRUCTURE_EXTENSION,
-    3 : STRUCTURE_TOWER,
-    4 : STRUCTURE_LAB,
-    5 : STRUCTURE_POWER_SPAWN, 
-    6 : STRUCTURE_STORAGE,
-    7 : STRUCTURE_NUKER,
-    8 : STRUCTURE_LINK,
-    9 : STRUCTURE_TERMINAL,
+    spawn : {fill: 'yellow', radius: 0.55, stroke: 'black'},
+    extension : {fill: 'yellow', radius: 0.25, stroke: 'black'},
+    lab : {fill: 'black', radius: 0.4, stroke: 'white'}, 
+    link : {fill: 'blue', radius: 0.25, stroke: 'white'}, 
+    nuker : {fill: 'green', radius: 0.55, stroke: 'white'},  
+    storage : {fill: 'cyan', radius: 0.55, stroke: 'black'}, 
+    terminal : {fill: 'white', radius: 0.45, stroke: 'black'}, 
+    tower : {fill: 'red', radius: 0.33, stroke: 'white'}, 
+    powerSpawn : {fill: 'red', radius: 0.55, stroke: 'black'},
 }
 
 
 class wpos {
-    constructor(x, y, type){
+    constructor(x, y, type, cube = false){
         this.x = x;
         this.y = y;
         this.type = type;
+        this.cube = cube;
     }
 
     draw(room){
-        if(this.type > 0){
+        if(this.type > 0 && !this.cube){
             room.visual.circle(this.x, this.y, types[this.type]);
         }else{
             room.visual.rect(this.x - 0.35, this.y - 0.35, 0.7, 0.7, types[this.type]);
-        }
-        
+        }  
     }
 }
 
@@ -50,7 +50,7 @@ var l3 = require('./layout_v3g');
 var labs = require('./lab_placment');
 var labsv2 = require('./labv2_p');
 var lroads = require('./layout_single_road');
-
+var build_place = require('./base_build_priority');
 
 const create_l = function(){
     let l = [];
@@ -101,7 +101,7 @@ module.exports.loop = function () {
     let max = 4;
     let build = 120;
     let test = null;
-    console.log(max);
+    
     // //create_l();
     // test = layout.test(size, max, build);
     // //console.log(JSON.stringify(arr));
@@ -135,7 +135,7 @@ module.exports.loop = function () {
     let cycles = 500;
     let labs1 = true;
     if(labs1){
-        test = lroads.test(room , 35, max, 210, 6 , 6, 21, 23);
+        //test = lroads.test(room , 35, max, 210, 6 , 6, 21, 23);
         let time = 0;
         for(let i = 0; i < cycles; i++){
             let t = new Date().getTime();
@@ -153,9 +153,13 @@ module.exports.loop = function () {
         }
         test.set_buildings_count(87);
         time += new Date().getTime() - t;
+        
+        let bp = build_place(test.get_building_list());
+        bp.check_in_radius2();
+
         console.log(JSON.stringify(test.get_tile_word(18, 26)));
         //test.add_tile_world(17, 28);
-        console.log(JSON.stringify(test.get_tile_word(17, 28)));
+        console.log(JSON.stringify(test.get_tile_word(17, 16)));
         console.log(test.buildings.length, 'buildings!');
         console.log(time);
         test.calculateMap();

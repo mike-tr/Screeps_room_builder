@@ -12,6 +12,7 @@ class get_freeSpace {
 
         this.base_arr = [];
 
+        this.room = room;
         this.contacts = 3;
         this.map = [];
         this.init = false;
@@ -33,6 +34,14 @@ class get_freeSpace {
         this.map = map;
         this.set_center(x, y,  room);
         this.init = true;
+    }
+
+    get_building_list(){
+        let arr = [];
+        for(let i of this.buildings){
+            arr.push(this.map[i]);
+        }
+        return arr;
     }
 
     set_center(x, y, room){
@@ -72,7 +81,7 @@ class get_freeSpace {
                 this.possible.push(this.base_arr[i]);
             }
         }
-        console.log(',,,,', this.possible.length);
+        this.add_buildings();
         this.calculateMap(); 
         let corners = [];
         for(let i of this.corners){
@@ -81,7 +90,25 @@ class get_freeSpace {
             }
         }
         this.corners = corners;
-        console.log(',,,,2', this.possible.length);
+    }
+
+    add_buildings(){
+        let buildings = this.room.find(FIND_MY_STRUCTURES, {
+            filter : (s) => s.structureType != STRUCTURE_ROAD && s.structureType != STRUCTURE_RAMPART, 
+        });
+        for(let i in buildings){
+            let pos = buildings[i].pos;
+            let tile = this.get_tile_word(pos.x, pos.y);
+            if(tile){
+                console.log("?", pos);
+                tile.type = -2;
+                tile.building = buildings[i].structureType;
+                this.buildings.push(tile.id);
+
+                print(tile, 'nani?')
+            }
+        }
+        console.log(this.buildings.length);
     }
 
     resetMap(){
@@ -126,6 +153,9 @@ class get_freeSpace {
     }
 
     add_build_place(){
+        // let id = Math.floor(Math.random()*this.possible.length);
+        // let key = this.possible[id];
+        // this.possible.splice(id, 1);
         let key = this.possible.pop();
         if(key){
             let tile = this.map[key];
@@ -134,7 +164,6 @@ class get_freeSpace {
                     return key;
                 }
             }
-            print(tile, 'test');
             this.resetMap();
             this.calculateMap();
             return this.add_build_place();
@@ -161,23 +190,20 @@ class get_freeSpace {
                 this.base_arr.push(tile.id);
             }
         }
-        console.log('cannot add building here!');
         return false;
     }
 
     check_legit(){
         for(let i of this.buildings){
             let tile = this.map[i];
-            if(tile.range < 0 || tile.range > this.size * 0.7){
-                print(tile, 'nlegit');
+            if(tile.range < 0 || tile.range > this.size * 0.6){
                 return false;
             }
         }
 
         for(let i of this.corners){
             let tile = this.map[i];
-            if(tile.range < 0){
-                print(tile, 'nlegit');
+            if(tile.range < 0 || tile.range > this.size * 0.55){
                 return false;
             }
         }
@@ -190,13 +216,17 @@ class get_freeSpace {
     }
 
     set_buildings_count(max){
-        let bc = this.buildings.length;
-        let c = bc - max;
-        console.log(c, ' bb?');
+        let c = this.buildings.length - max;
         for(let i = 0; i < c; i++){
             let b = this.buildings.shift();
-            this.map[b].type = 0;
-            this.possible.push(b);
+            let tile = this.map[b];
+            if(!tile.building){
+                this.map[b].type = 0;
+                this.possible.push(b);
+            }else{
+                this.buildings.push(b);
+                c++;
+            }
         }
     }
 
