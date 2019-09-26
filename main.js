@@ -16,15 +16,16 @@ const types = {
 
 const t_t = {
     spawn : {fill: 'yellow', radius: 0.65, stroke: 'black'},
-    extension : {fill: 'yellow', radius: 0.25, stroke: 'black'},
+    extension : {fill: 'yellow', radius: 0.45, stroke: 'black'},
     lab : {fill: 'black', radius: 0.4, stroke: 'white'}, 
-    link : {fill: 'blue', radius: 0.25, stroke: 'white'}, 
+    link : {fill: 'blue', radius: 0.4, stroke: 'white'}, 
     nuker : {fill: 'green', radius: 0.55, stroke: 'white'},  
     storage : {fill: 'cyan', radius: 0.55, stroke: 'black'}, 
-    terminal : {fill: 'white', radius: 0.45, stroke: 'black'}, 
-    tower : {fill: 'red', radius: 0.33, stroke: 'white'}, 
+    terminal : {fill: 'white', radius: 0.55, stroke: 'black'}, 
+    tower : {fill: 'red', radius: 0.43, stroke: 'white'}, 
     powerSpawn : {fill: 'red', radius: 0.55, stroke: 'black'},
-    holder : {fill: 'white', radius: 0.33, stroke: 'blue'},
+    observer : {fill: '#a0fdff', radius: 0.45, stroke: 'white'},
+    holder : {fill: 'white', radius: 0.43, stroke: 'blue'},
 }
 
 
@@ -54,8 +55,8 @@ var arr = [];
 var l3 = require('./layout_v3g');
 var labs = require('./lab_placment');
 var labsv2 = require('./labv2_p');
-var lroads = require('./layout_single_road');
-var build_place = require('./base_build_priority');
+var base = require('./roomBuilder');
+require('./RoomVisual')
 
 const create_l = function(){
     let l = [];
@@ -121,8 +122,17 @@ module.exports.loop = function () {
     //     d = new wpos(p.x + 1, p.y + 1, p.type);
     //     d.draw(room);
     // }
+    let time = 0;
+    let cycles = 200;
+    for(let i = 0; i < cycles; i++){
+        let t = new Date().getTime();
+        test = base.createBase(room, 17, 17);
+        time += new Date().getTime() - t;
+    }
+    console.log(time / cycles);
 
-    test = l3.test(room, 50, 4, 100, 20.5, 25.5);
+    test = base.createBase(room, 17, 17);
+
     //console.log(JSON.stringify(arr));
     for(let i in test.map){
         let p = test.map[i];
@@ -130,50 +140,18 @@ module.exports.loop = function () {
         if(p.contacts > 0 && t > 0){
             t = 7
         }
-        let d = new wpos(p.x, p.y, p.contacts);
+        //let d = new wpos(p.x, p.y, p.contacts);
+
+        //room.visual.structure(8, 13, STRUCTURE_TOWER);
         //d.draw(room);
-        d = new wpos(p.gridX, p.gridY, p.type);
+        //d = new wpos(p.gridX, p.gridY, p.type);
         //d.draw(room);
     }
 
     //test = l3.test(room ,size, max, build, 5 , 6);
-    let cycles = 500;
     let labs1 = true;
     if(labs1){
-        //test = lroads.test(room , 35, max, 210, 6 , 6, 21, 23);
-        let time = 0;
-        for(let i = 0; i < cycles; i++){
-            let t = new Date().getTime();
-            //test = lroads.test(room , 35, max, 210, 6 , 6, 21, 23);
-            //test.add_tile_world(18, 26);
-            //test.add_tile_world(31, 27)
-            //test.add_tile_world(31, 28)
-            //time += new Date().getTime() - t;
-        }
-        //console.log(JSON.stringify(test.possible));
-        test = lroads.test(room , 15, max, 210, 10 , 10, 17, 17);
-        let t = new Date().getTime();
-        for(let i = 0; i < 129 ; i++){
-            test.add_build_place();
-        }
-        test.set_buildings_count(87);
-        time += new Date().getTime() - t;
-        console.log(time, 'generator');
-
-        t = new Date().getTime();
-        let bp = build_place(test.get_map_object());
-        bp.check_in_radius(1, 8, 5, 10, STRUCTURE_LAB);
-        bp.check_in_radius(0, 0, 3, 4, "holder");
-        bp.check_in_radius(0, 0, 22, 6, STRUCTURE_TOWER);
-        console.log(new Date().getTime() - t, 'bp!');
-
-        console.log(bp.buildings[STRUCTURE_LAB].length);
-
-        console.log(JSON.stringify(test.get_tile_word(18, 26)));
-        //test.add_tile_world(17, 28);
-        console.log(JSON.stringify(test.get_tile_word(17, 16)));
-        console.log(test.buildings.length, 'buildings!');
-        test.calculateMap();
+        
         for(let j in test.map){
             let p = test.map[j];
             let t = p.type;
@@ -183,7 +161,10 @@ module.exports.loop = function () {
             //let d = new wpos(p.x, p.y, p.type);
             //d.draw(room);
             let d = new wpos(p.x, p.y, p.building);
-            d.draw_structure(room);
+            if(p.building){
+                room.visual.structure(p.x, p.y, p.building);
+            }
+            //d.draw_structure(room);
         }
     }
     

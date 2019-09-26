@@ -44,6 +44,9 @@ class get_freeSpace {
             arr.push(this.map[i]);
         }
         obj.buildings = arr;
+        this.roads.push(this.get_tile_word(this.base.x, this.base.y));
+        obj.roads = this.roads;
+        obj.base = this.base;
         return obj;
     }
 
@@ -103,15 +106,11 @@ class get_freeSpace {
             let pos = buildings[i].pos;
             let tile = this.get_tile_word(pos.x, pos.y);
             if(tile){
-                console.log("?", pos);
                 tile.type = -2;
                 tile.building = buildings[i].structureType;
                 this.buildings.push(tile.id);
-
-                print(tile, 'nani?')
             }
         }
-        console.log(this.buildings.length);
     }
 
     resetMap(){
@@ -188,6 +187,7 @@ class get_freeSpace {
                 return true;
             }
             tile.type = 1;
+            this.roads.push(tile);
             this.buildings.pop();
             if(tile.range == 0){
                 this.base_arr.push(tile.id);
@@ -297,7 +297,7 @@ const print = (obj, text)=>{
     console.log(JSON.stringify(obj), text);
 }
 
-const create_l = function(room ,size, range, build, x_offset, y_offset , x_center, y_center){
+const create_l = function(room ,size, x_offset, y_offset , x_center, y_center){
     let map = new get_freeSpace(room, size, x_offset, y_offset, x_center, y_center);
     return map;
 }
