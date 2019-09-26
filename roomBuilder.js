@@ -39,6 +39,6 @@ module.exports = {
         buildings.get_closest_to(center.x, center.y, 6, STRUCTURE_TOWER, true);
         buildings.get_closest_to(center.x, center.y, 60, STRUCTURE_EXTENSION, true);
 
-        return layout;
+        return { map : layout.map, bclass : buildings, b_list : buildings.buildings };
     }
 }
