@@ -39,15 +39,46 @@ class get_freeSpace {
 
     get_map_object(){
         let obj = {}
-        let arr = [];
+        let build_arr = [];
         for(let i of this.buildings){
-            arr.push(this.map[i]);
+            build_arr.push(this.map[i]);
         }
-        obj.buildings = arr;
-        this.roads.push(this.get_tile_word(this.base.x, this.base.y));
-        obj.roads = this.roads;
+
+        this.roads = this.create_roads(build_arr);
+        obj.buildings = this.sort_by_distance(build_arr);
+        obj.roads = this.sort_by_distance(this.roads);
         obj.base = this.base;
         return obj;
+    }
+
+    sort_by_distance(arr){
+        let carr = [];
+        for(let i in arr){
+            let t = arr[i];
+            carr.push({
+                x : t.x,
+                y : t.y,
+                type : t.building,
+                id : t.gid,
+            })
+        }
+
+        return carr.sort((a, b) => {
+            return this.distance(a.x, a.y, this.base.x, this.base.y) - this.distance(b.x, b.y, this.base.x, this.base.y);
+        });
+    }
+
+    create_roads(map){
+        let arr = {};
+        for(let i in map){
+            let tile = map[i];
+            this.add_inRange(tile, (t) => {
+                if(t.type == -3 || t.type > -1){
+                    arr[t.id] = t;
+                }
+            })
+        }
+        return Object.values(arr);
     }
 
     set_center(x, y, room){
@@ -108,6 +139,7 @@ class get_freeSpace {
             if(tile){
                 tile.type = -2;
                 tile.building = buildings[i].structureType;
+                tile.gid = buildings[i].id;
                 this.buildings.push(tile.id);
             }
         }
@@ -258,14 +290,14 @@ class get_freeSpace {
         }
     }
 
-    add_inRange(arr,gridX, gridY){
+    add_inRange(tile, to_do){
         for(let _gridY = -1; _gridY < 2; _gridY++){
             for(let _gridX = -1; _gridX < 2; _gridX++){
-                let x1 = _gridX + gridX;
-                let y1 = _gridY + gridY;      
-                let tile = this.get_tile(x1, y1);
-                if(tile){
-                    arr.push(tile);
+                let x1 = _gridX + tile.gridX;
+                let y1 = _gridY + tile.gridY;      
+                let get = this.get_tile(x1, y1);
+                if(get){
+                    to_do(get);
                 }
             }
         }

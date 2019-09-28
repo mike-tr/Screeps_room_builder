@@ -2,21 +2,30 @@ class buildingPlacement{
     constructor(map){
         this.map = map;
         this.buildings = {
-            spawn : { tiles : [], index : 0 },
-            extension : { tiles : [], index : 0 },
-            lab : { tiles : [], index : 0 },
-            link : { tiles : [], index : 0 },
-            nuker : { tiles : [], index : 0 },
-            storage : { tiles : [], index : 0 },
-            terminal : { tiles : [], index : 0 }, 
-            tower : { tiles : [], index : 0 }, 
-            powerSpawn : { tiles : [], index : 0 },
-            holder : { tiles : [], index : 0 },
-            observer : { tiles : [], index : 0 },
-            factory : { tiles : [], index : 0},
+            spawn : { ids : [] },
+            extension : { ids : [] },
+            lab : { ids : [] },
+            link : { ids : [] },
+            nuker : { ids : [] },
+            storage : { ids : [] },
+            terminal : { ids : [] }, 
+            tower : { ids : [] }, 
+            powerSpawn : { ids : [] },
+            observer : { ids : [] },
+            factory : { ids : [] },
         };
-        this.open = map.buildings.reverse();
-        this.roads = map.roads.reverse();
+        
+        this.all = [];
+        let start = 0;
+        for(let i in map.buildings){
+            let tile = map.buildings[i];
+            tile.index = start;
+            this.all.push(tile);
+            start++;
+        }
+
+        this.open = map.buildings;
+        this.roads = map.roads;
         this.center = map.base;
     }
 
@@ -24,8 +33,8 @@ class buildingPlacement{
         for(let i in arr){
             let type = arr_type[i];
             let tile = arr[i];
-            tile.building = type;
-            this.buildings[type].tiles.push(tile);
+            tile.type = type;
+            this.buildings[type].ids.push(tile.index);
             this.remove_tile(tile);
         }
     }
@@ -44,15 +53,10 @@ class buildingPlacement{
     get_type(itype){
         for(let i in this.open){
             let t = this.open[i];
-            if(t.building == itype){
+            if(t.type == itype){
                 return t;
             }
         }
-    }
-
-    add_building(tile){
-        this.buildings[tile.building].tiles.unshift(tile);
-        this.buildings[tile.building].index++;
     }
 
     remove_tile(tile){
@@ -81,8 +85,8 @@ class buildingPlacement{
         let ex = [];
         for(let i in this.open){
             let tile = this.open[i];
-            if(tile.building){
-                if(tile.building == itype){
+            if(tile.type){
+                if(tile.type == itype){
                     arr.push({ id : i, d : 0 });
                 }
                 continue;
@@ -108,10 +112,10 @@ class buildingPlacement{
             return;
         for(let i in tiles){
             let tile = tiles[i];
-            tile.building = type;
+            tile.type = type;
+            this.buildings[type].ids.push(tile.index);
             this.remove_tile(tile);
         }
-        this.buildings[type].tiles.concat(tiles);   
         return tiles;   
     }
 
@@ -122,19 +126,14 @@ class buildingPlacement{
                 continue;
             }
             let tile = this.open[i];
-            if(tile.building && tile.building != type)
+            if(tile.type && tile.type != type)
                 continue;
-            let arr = this.sort(this.open, tile, radius, type);
+            let arr = this.get_withinRange(this.open, tile, radius, type);
             if(arr.length >= count){
                 let v = this.check_overload(overlaps, arr, radius, count);
                 if(v){
                     v = v.slice(0, count);
-                    for(let i in v){
-                        v[i].building = type;
-                        this.remove_tile(tile);
-                    }
-                    this.buildings[type].tiles.concat(v); 
-                    return v;
+                    return this.set_tiles(v, type);
                 }
                 //console.log('found one!', JSON.stringify(tile));
             }
@@ -160,7 +159,7 @@ class buildingPlacement{
                 continue;
             }
             let tile = arr[i];
-            let arr2 = this.sort(arr, tile, range);
+            let arr2 = this.get_withinRange(arr, tile, range);
             if(arr2.length >= count){
                 arr2 = arr2.sort((a) => this.tile_distance(a, first));
                 return arr2;
@@ -169,13 +168,13 @@ class buildingPlacement{
         return null;
     }
 
-    sort(arr, tile, r, type){
+    get_withinRange(arr, tile, r, type){
         let ret = [];
         ret.push(tile);
         for(let i in arr){
             let t = arr[i];
             
-            if(t == tile || (t.building && t.building != type)) 
+            if(t == tile || (t.type && t.type != type)) 
                 continue;
             let d = this.tile_distance(t, tile);
             if(d <= r){
@@ -193,14 +192,6 @@ class buildingPlacement{
 
     distance(x1, y1, x2, y2){
         return (x1 - x2) ** 2 + (y1 - y2) ** 2;
-    }
-
-    sdist(tilea, tileb){
-        let x = Math.abs(tilea.x - tileb.x);
-        let y = Math.abs(tilea.y - tileb.y);
-        if(x > y)
-            return x;
-        return y;
     }
 }
 

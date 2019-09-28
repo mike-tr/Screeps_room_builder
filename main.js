@@ -55,7 +55,7 @@ var arr = [];
 var l3 = require('./layout_v3g');
 var labs = require('./lab_placment');
 var labsv2 = require('./labv2_p');
-var base = require('./roomBuilder');
+var base = require('./room_constractor');
 require('./RoomVisual')
 
 const create_l = function(){
@@ -90,120 +90,36 @@ module.exports.loop = function () {
     //for(let x = x)
 
     let room = spawn.room;
-    //let d = new wpos(25, 25, 1);
-    //d.draw(room);
 
-    //console.log("???");
-    let strctures = room.find(FIND_MY_STRUCTURES);
-    for(let i in strctures){
-        let s = strctures[i];
-        let t = s.structureType;
-        t = (_.invert(t_t))[t];
-        let pos = new wpos(s.pos.x - 25, s.pos.y - 25, t);
-        arr.push(pos); 
-    }
-
-    let size = 21;
-    let max = 4;
-    let build = 120;
-    let test = null;
-    
-    // //create_l();
-    // test = layout.test(size, max, build);
-    // //console.log(JSON.stringify(arr));
-    // for(let i in test.map){
-    //     let p = test.map[i];
-    //     let t = p.type;
-    //     if(p.contacts > 0 && t > 0){
-    //         t = 5;
-    //     }
-    //     let d = new wpos(p.x + 1, p.y + 1, p.contacts);
-    //     //d.draw(room);
-    //     d = new wpos(p.x + 1, p.y + 1, p.type);
-    //     d.draw(room);
-    // }
     let time = 0;
     let cycles = 200;
     for(let i = 0; i < cycles; i++){
         let t = new Date().getTime();
-        test = base.createBase(room, 17, 17);
+        base.init(room);
         time += new Date().getTime() - t;
     }
     console.log(time / cycles);
 
-    test = base.createBase(room, 17, 17);
-
-    //console.log(JSON.stringify(arr));
-    for(let i in test.map){
-        let p = test.map[i];
-        let t = p.type;
-        if(p.contacts > 0 && t > 0){
-            t = 7
-        }
-        //let d = new wpos(p.x, p.y, p.contacts);
-
-        //room.visual.structure(8, 13, STRUCTURE_TOWER);
-        //d.draw(room);
-        //d = new wpos(p.gridX, p.gridY, p.type);
-        //d.draw(room);
-    }
-
-    //test = l3.test(room ,size, max, build, 5 , 6);
-    let labs1 = true;
-    if(labs1){
-        
-        for(let j in test.map){
-            let p = test.map[j];
-            let t = p.type;
-            if(p.contacts > 0 && t > 0){
-                t = 7
-            }
-            //let d = new wpos(p.x, p.y, p.type);
-            //d.draw(room);
-            let d = new wpos(p.x, p.y, p.building);
-            if(p.building){
-                room.visual.structure(p.x, p.y, p.building);
-            }
-            //d.draw_structure(room);
-        }
-    }
+    time = new Date().getTime();
+    base.loop(room);
+    console.log(new Date().getTime() - time, 'memload');
+ 
     
-    let labs2 = true;
-    if(labs2){
-        test = labs.test(room , 50, max, 210, 0 , 0);
-        let time = 0;
-        for(let i = 0; i < cycles; i++){
-            let t = new Date().getTime();
-            //test = labs.test(room , 50, max, 210, 0 , 0);
-            //test = labs.test(room , 50, max, 210, 0 , 0);
-            //test = labs.test(room , 50, max, 210, 0 , 0);
-            //test = labs.test(room , 50, max, 210, 0 , 0);
-            // test = labsv2.test(room , 50, max, 210, 0 , 0);
-            // test.add_tile(15, 15);
-            // test.add_tile(21, 21);
-            // test.get_tile(10 , 10);
-            // test.get_tile_word(15, 15);
-            //test.get_area(5);
-            //test.get_closest_area(5, 20 , 20);
-            time += new Date().getTime() - t;
-        }
-        //console.log(time / cycles);
-        test.calculateMap();
-
-  
-        for(let j in test.map){
-            let p = test.map[j];
+    let test = room.memory.planner;
+    for(let j in test.indexes){
+        for(let i of test.indexes[j].ids){
+            let p = test.buildings[i];
             let t = p.type;
             if(p.contacts > 0 && t > 0){
                 t = 7
             }
-            let d = new wpos(p.x, p.y, p.contacts);
-            //d.draw(room);
-            d = new wpos(p.x, p.y, p.type);
+            let d = new wpos(p.x, p.y, 3);
+            if(p.type && !p.id){
+                //room.visual.structure(p.x, p.y, p.type);
+            }
             //d.draw(room);
         }
     }
-
     console.log('---------------------------------------');
 }
 
