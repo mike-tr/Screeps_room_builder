@@ -1,33 +1,16 @@
 # Screeps_room_builder
 Screeps_room_builder
 
-My repositery of my screeps room planner.
-should in the end be fully automatic layout of the base,
-so far can create a map of potential building placements.
+main.js example.
 
-Very very slow so far,
-layout_single_road.js - the class that create room build layout,
-pass size the size of the potential base,
-Around 15 is recommended.
-choose x,y for the center of the base (not this tile will be empty!).
+create spawn, would automatically create a base layout around it,
 
-can work around walls and terain.
+room_constractor.js - create all the functionality to auto build,
+init - generate the layout,
+loop - checks for controller update, and create constructions when needed.
 
-Also usefull
-lab_placment.js
-
-can find the area size in any place on the room.
-works quite fast about 1-2 ms to get the ranges and all areas in the room
-how to get the area?
-returns a class with Map array.
-
-each tile object,
-has x,y.
-as well as the 'type' variable.
-type = range to walls.
-so type - 5 would be
-this tile is a center of 5x5 grid without walls. 
+layout_planner.js - generate the initial layout, just building placements and such.
+building_planner.js - a class that can use generated data from above, and place buildings and such.
+_planner.js - the settings for the base layout, building priority - A.k.a what is toward the center and what is more outward.
 
 
-all other scripts ARE JUNK,
-feel free to use as you see fit.
