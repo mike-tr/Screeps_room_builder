@@ -1,5 +1,5 @@
-var layout_class = require('./layout_single_road');
-var buildings_buildings = require('./base_build_priority');
+var layout_class = require('./layout_planner');
+var buildings_buildings = require('./building_planner');
 
 module.exports = {
     
@@ -7,7 +7,7 @@ module.exports = {
     createBase : function(room, x, y){
         let layout = layout_class.test(room, 15,x - 7,y - 7, x, y);
         while(layout.add_build_place()){}
-        layout.set_buildings_count(86);
+        //layout.set_buildings_count(86);
         let buildings = buildings_buildings(layout.get_map_object());
         let center = buildings.center;
 

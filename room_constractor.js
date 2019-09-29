@@ -20,7 +20,7 @@ const under_c = [ STRUCTURE_EXTENSION, STRUCTURE_LAB, STRUCTURE_LINK, STRUCTURE_
     STRUCTURE_SPAWN, STRUCTURE_STORAGE, STRUCTURE_NUKER, STRUCTURE_TERMINAL, STRUCTURE_TOWER, "factory"];
 
 
-var base = require('./roomBuilder');
+var base = require('./_planner');
 
 /** @param {Room} room **/
 const constract = function(room, type, skip){
