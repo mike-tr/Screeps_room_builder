@@ -1,4 +1,4 @@
-var base = require('./_planner');
+var base = require('./_planner')
 
 /** @param {Room} room **/
 const constract = function(room, type, skip){

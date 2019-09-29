@@ -1,6 +1,7 @@
-var layout_class = require('./layout_planner');
+var layout_class = require('./llayout_planner');
 var buildings_buildings = require('./building_planner');
 
+//create a ghost for storage + spawn + link + terminal
 const add_sslt = function(buildings, types, rem_arr = []){
     let existing = buildings.get_types(types);
     let roads = buildings.get_roads_from(existing);
@@ -29,7 +30,7 @@ module.exports = {
         let layout = layout_class.test(room, 17,x - 8,y - 8, x, y);
         while(layout.add_build_place()){}
         //layout.set_buildings_count(86);
-        let buildings = buildings_buildings(layout.get_map_object());
+        let buildings = new buildings_buildings(layout.get_map_object(), room);
         let center = buildings.center;
 
         add_sslt(buildings, [STRUCTURE_SPAWN, STRUCTURE_STORAGE, STRUCTURE_TERMINAL, STRUCTURE_LINK]);
