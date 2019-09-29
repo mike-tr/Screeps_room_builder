@@ -1,6 +1,27 @@
 var layout_class = require('./layout_planner');
 var buildings_buildings = require('./building_planner');
 
+const add_sslt = function(buildings, types, rem_arr = []){
+    let existing = buildings.get_types(types);
+    let roads = buildings.get_roads_from(existing);
+    let response = buildings.get_closest(types.length + rem_arr.length, 3, 'holder', false, roads);
+    if(response){
+        buildings.set_arr(response, rem_arr.concat(types));
+        buildings.update_tiles(existing);
+        return true;
+    }else if(rem_arr.length == 0){
+        if(!add_sslt(buildings, [STRUCTURE_SPAWN, STRUCTURE_STORAGE, STRUCTURE_TERMINAL], ['link'])){
+            if(!add_sslt(buildings, [STRUCTURE_LINK, STRUCTURE_STORAGE, STRUCTURE_TERMINAL], ['spawn'])){
+                if(!add_sslt(buildings, [STRUCTURE_STORAGE, STRUCTURE_TERMINAL], ['link', 'spawn'])){
+                    response = buildings.get_closest(4, 3, "holder", false);
+                    buildings.set_arr(response, ['spawn', 'link', 'storage', 'terminal']);
+                }
+            }
+        }
+    }
+    return false;   
+}
+
 module.exports = {
     
     /** @param {Room} room **/
@@ -11,23 +32,7 @@ module.exports = {
         let buildings = buildings_buildings(layout.get_map_object());
         let center = buildings.center;
 
-        let spawn = buildings.get_type(STRUCTURE_SPAWN);
-        if(spawn){
-            let roads = buildings.get_road_inrange(spawn.x, spawn.y, 3);
-            let response = buildings.get_closest(3, 3, "holder", false, roads);
-            if(response){
-                buildings.set_arr(response, ['link', 'storage', 'terminal']);
-                buildings.update_tile(spawn);
-                //buildings.add_building(spawn);
-            }else{
-                let response = buildings.get_closest(4, 3, "holder", false);
-                buildings.set_arr(response, ['spawn', 'link', 'storage', 'terminal']);
-            }
-            //console.log(roads.length, JSON.stringify(roads));
-        }else{
-            let response = buildings.get_closest(4, 3, "holder", false);
-            buildings.set_arr(response, ['spawn', 'link', 'storage', 'terminal']);
-        }
+        add_sslt(buildings, [STRUCTURE_SPAWN, STRUCTURE_STORAGE, STRUCTURE_TERMINAL, STRUCTURE_LINK]);
         buildings.get_closest_to(center.x, center.y, 1, STRUCTURE_POWER_SPAWN, true);
         buildings.get_closest_to(center.x, center.y, 1, 'factory', true);
         buildings.get_closest_to(center.x, center.y, 1, STRUCTURE_NUKER, true);

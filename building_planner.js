@@ -59,14 +59,71 @@ class buildingPlacement{
         }
     }
 
+    get_types(arr){
+        let ret = [];
+        let del = [];
+        for(let i in this.open){
+            let found = false;
+            let t = this.open[i];
+            for(let type of arr){
+                if(t.type == type){
+                    ret.push(t);
+                    del.push(type);
+                }
+            }
+        }
+
+        console.log(del, arr);
+        for(let d of del){
+            let id = arr.indexOf(d);
+            if(id >= 0)
+                arr.splice(id, 1);
+        }
+
+        return ret;
+    }
+
+    get_roads_from(arr){
+        let ret = {}
+        let p = 0;
+
+        let types = {};
+        for(let t of arr){
+            if(!types[t.type]){
+                p++;
+                types[t.type] = true;
+            }
+            for(let r of this.get_road_inrange(t.x, t.y, 3)){
+                if(ret[r.id]){
+                    ret[r.id].n++;
+                }else{
+                    ret[r.id] = { n : 1, road : r };
+                }
+            }
+        }
+
+        let rr = [];
+        for(let r in ret){
+            let o = ret[r];
+            if(o.n >= p){
+                rr.push(o.road);
+            }
+        }
+        return rr;
+    }
+
     remove_tile(tile){
         let id = this.open.indexOf(tile);
         this.open.splice(id, 1);
     }
 
     get_closest(count, max_range, itype, set, in_list){
+        if(count == 0)
+            return null;
+
         if(!in_list)
             in_list = this.roads;
+        console.log(count, in_list);
         for(let i in in_list){
             let r = in_list[i];
             let get = this.get_closest_to(r.x, r.y, count, itype);
@@ -94,6 +151,10 @@ class buildingPlacement{
             let dist = this.distance(x, y, tile.x, tile.y);
             arr.push({ id : i, d : dist });
         }
+        if(arr.length == 0){
+            return null;
+        }
+
         arr.sort((a, b) => a.d - b.d);
         arr = arr.slice(0, count);
         arr = arr.concat(ex);
@@ -119,8 +180,11 @@ class buildingPlacement{
         return tiles;   
     }
 
-    update_tile(tile){
-        if(tile.type){
+    update_tiles(tiles){
+        console.log(JSON.stringify(tiles));
+        for(let i in tiles){
+            let tile = tiles[i];
+            console.log(JSON.stringify(tile), 'update');
             this.buildings[tile.type].ids.push(tile.index);
             this.remove_tile(tile);
         }

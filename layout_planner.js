@@ -75,6 +75,7 @@ class get_freeSpace {
             this.add_inRange(tile, (t) => {
                 if(t.type == -3 || t.type > -1){
                     arr[t.id] = t;
+                    t.gid = t.id;
                 }
             })
         }
@@ -133,6 +134,9 @@ class get_freeSpace {
         let buildings = this.room.find(FIND_MY_STRUCTURES, {
             filter : (s) => s.structureType != STRUCTURE_ROAD && s.structureType != STRUCTURE_RAMPART, 
         });
+        buildings = buildings.concat(this.room.find(FIND_MY_CONSTRUCTION_SITES, {
+            filter : (s) => s.structureType != STRUCTURE_ROAD && s.structureType != STRUCTURE_RAMPART, 
+        }))
         for(let i in buildings){
             let pos = buildings[i].pos;
             let tile = this.get_tile_word(pos.x, pos.y);

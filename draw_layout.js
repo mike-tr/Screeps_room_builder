@@ -10,6 +10,7 @@ const basic_layout = {
     powerSpawn : {fill: 'red', radius: 0.55, stroke: 'black'},
     observer : {fill: '#a0fdff', radius: 0.45, stroke: 'white'},
     factory : {fill: 'white', radius: 0.43, stroke: 'blue'},
+    holder : {fill: 'black', radius: 0.43, stroke: 'blue'},
 }
 
 /** @param {Room} room **/
