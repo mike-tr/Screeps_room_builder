@@ -119,6 +119,13 @@ class buildingPlacement{
         return tiles;   
     }
 
+    update_tile(tile){
+        if(tile.type){
+            this.buildings[tile.type].ids.push(tile.index);
+            this.remove_tile(tile);
+        }
+    }
+
     checkOverlaping(overlaps, skip, radius, count, type){
         for(let i in this.open){
             if(skip > 0){

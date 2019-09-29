@@ -17,7 +17,7 @@ module.exports = {
             let response = buildings.get_closest(3, 3, "holder", false, roads);
             if(response){
                 buildings.set_arr(response, ['link', 'storage', 'terminal']);
-                buildings.remove_tile(spawn);
+                buildings.update_tile(spawn);
                 //buildings.add_building(spawn);
             }else{
                 let response = buildings.get_closest(4, 3, "holder", false);
@@ -31,8 +31,8 @@ module.exports = {
         buildings.get_closest_to(center.x, center.y, 1, STRUCTURE_POWER_SPAWN, true);
         buildings.get_closest_to(center.x, center.y, 1, 'factory', true);
         buildings.get_closest_to(center.x, center.y, 1, STRUCTURE_NUKER, true);
-        buildings.get_closest_to(center.x, center.y, 2, STRUCTURE_SPAWN, true);
         buildings.get_closest_to(center.x, center.y, 1, STRUCTURE_OBSERVER, true);
+        buildings.get_closest_to(center.x, center.y, 2, STRUCTURE_SPAWN, true);
         buildings.get_closest_to(center.x, center.y, 6, STRUCTURE_TOWER, true);
         buildings.checkOverlaping(1, 8, 5, 10, STRUCTURE_LAB);
         buildings.get_closest_to(center.x, center.y, 60, STRUCTURE_EXTENSION, true);

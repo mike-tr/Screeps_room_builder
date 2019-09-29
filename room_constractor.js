@@ -92,9 +92,6 @@ module.exports = {
 
     /** @param {Room} room **/
     loop : function(room){    
-        if(Game.time % 2 != 0)
-            return;
-
         if(room.memory.clevel != room.controller.level){
             room.memory.clevel = room.controller.level;
             room.memory.planner.enabled = true;
@@ -144,7 +141,7 @@ module.exports = {
                         if(response.length > 0){
                             tile.id = response[0].id;
                         }else{
-                            //room.createConstructionSite(tile.x, tile.y, "road");
+                            room.createConstructionSite(tile.x, tile.y, "road");
                             return;
                         }
                     }
