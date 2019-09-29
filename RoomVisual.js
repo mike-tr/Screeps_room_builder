@@ -15,7 +15,7 @@ const speechFont = 'Times New Roman'
 
 RoomVisual.prototype.structure = function(x,y,type,opts={}){
   opts = Object.assign({
-    opacity: 1
+    opacity: 0.5
   },opts)
   switch(type){
     case STRUCTURE_EXTENSION:

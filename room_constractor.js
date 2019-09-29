@@ -35,15 +35,18 @@ const constract = function(room, type, skip){
         let tile = planner.buildings[i];
         if(Game.getObjectById(tile.id))
             continue;
-        let response = room.lookForAt(LOOK_STRUCTURES, tile.x, tile.y);
+        let response = room.lookForAt(LOOK_STRUCTURES, tile.x, tile.y).filter((s) => s.structureType != STRUCTURE_ROAD 
+            && s.structureType != STRUCTURE_RAMPART);
+        console.log(JSON.stringify(tile), type);
         if(response.length == 0){
             response = room.lookForAt(LOOK_CONSTRUCTION_SITES, tile.x, tile.y);
             if(response.length == 0){
                 planner.in_process[tile.index] = tile;
                 room.createConstructionSite(tile.x, tile.y, type);
-                console.log(JSON.stringify(tile));
+                console.log('creating', type, 'at', tile.x, tile.y);
                 return sk;
             }else{
+                
                 tile.id = response[0].id;
             }
         }else{
@@ -60,19 +63,10 @@ const update_ongoing = function(room){
             let tile = queue[index];
             let find = Game.getObjectById(tile.id);
             console.log(find);
+
             if(!find){
-                let response = room.lookForAt(LOOK_STRUCTURES, tile.x, tile.y);
-                if(response.length > 0){
-                    tile.id = response[0].id;
-                    delete queue[index];
-                }else{
-                    response = room.lookForAt(LOOK_CONSTRUCTION_SITES, tile.x, tile.y);
-                    if(response.length > 0){
-                        tile.id = response[0].id;
-                    }else{
-                        delete queue[index];
-                    }
-                }
+                delete queue[index];
+                room.memory.planner.nvalidate = false;
             }
         }
         return false;
@@ -84,13 +78,14 @@ module.exports = {
     /** @param {Room} room **/
     init : function(room, reset){
         if(!room.memory.planner){
-            console.log("initialized room planner!");
+            console.log("initializing room planner!");
             let spawns = room.find(FIND_MY_SPAWNS);
             if(spawns.length > 0){
                 let spawn = spawns[0];
                 base.createBase(room, spawn.pos.x + 1, spawn.pos.y);
                 room.memory.clevel = 0;
                 room.memory.planner.in_process = {};
+                room.memory.planner.max_buildings = 8;
             }
         }
     },
@@ -100,12 +95,18 @@ module.exports = {
         if(Game.time % 2 != 0)
             return;
 
-        if(room.controller.level != room.memory.clevel){
+        if(room.memory.clevel != room.controller.level){
+            room.memory.clevel = room.controller.level;
+            room.memory.planner.enabled = true;
+            room.memory.planner.nvalidate = false;
+        }
+
+        if(room.memory.planner.enabled){
             let co = room.find(FIND_MY_CONSTRUCTION_SITES).length;
-            if(co > 8){
+            let planner = room.memory.planner;
+            if(co > planner.max_buildings){
                 return;
             }
-            let planner = room.memory.planner;
             let response = update_ongoing(room);
 
             if(!planner.nvalidate){
@@ -119,8 +120,6 @@ module.exports = {
                     let n = CONTROLLER_STRUCTURES[type][room.controller.level] - os;
                     let skip = 0;
                     for(let i = 0; i < n; i++){
-                        //skip = constract(room, s, skip);
-                        console.log(type);
                         skip = constract(room, type, skip);
                         if(skip != ERR_INVALID_TARGET)
                             done = false;
@@ -132,7 +131,7 @@ module.exports = {
                 }
             }else if(response){
                 planner.nvalidate = false;
-                room.memory.clevel = room.controller.level;
+                planner.enabled = false;
             }
         }else if(room.find(FIND_MY_CONSTRUCTION_SITES).length < 5){
             for(let tile of room.memory.planner.roads){
@@ -145,7 +144,7 @@ module.exports = {
                         if(response.length > 0){
                             tile.id = response[0].id;
                         }else{
-                            room.createConstructionSite(tile.x, tile.y, "road");
+                            //room.createConstructionSite(tile.x, tile.y, "road");
                             return;
                         }
                     }

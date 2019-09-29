@@ -70,7 +70,10 @@ module.exports.loop = function () {
                 t = 7
             }
             let d = new wpos(p.x, p.y, 3);
-            if(p.type && !p.id){
+            if(p.type){
+                if(p.id){
+                   // console.log(JSON.stringify(p));
+                }
                 room.visual.structure(p.x, p.y, p.type);
             }
             //d.draw(room);

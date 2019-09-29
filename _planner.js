@@ -5,7 +5,7 @@ module.exports = {
     
     /** @param {Room} room **/
     createBase : function(room, x, y){
-        let layout = layout_class.test(room, 15,x - 7,y - 7, x, y);
+        let layout = layout_class.test(room, 17,x - 8,y - 8, x, y);
         while(layout.add_build_place()){}
         //layout.set_buildings_count(86);
         let buildings = buildings_buildings(layout.get_map_object());
