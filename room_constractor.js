@@ -120,7 +120,7 @@ module.exports = {
                         if(response.length > 0){
                             tile.id = response[0].id;
                         }else{
-                            //room.createConstructionSite(tile.x, tile.y, "road");
+                            room.createConstructionSite(tile.x, tile.y, "road");
                             return;
                         }
                     }

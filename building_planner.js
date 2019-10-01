@@ -120,6 +120,12 @@ module.exports = class buildingPlacement{
             let index = pos.x * 50 + pos.y;
             this.roads[index] = { x : pos.x, y : pos.y, index : index };
         }
+
+        let x = this.center.x;
+        let y = this.center.y;
+        this.roads =  Object.values(this.roads).sort((a, b) => {
+            return this.distance(a.x, a.y, x, y) - this.distance(b.x, b.y, x, y);
+        });
     }
 
     connect_roads(arr = [], roads = {}, ret = {}){

@@ -144,6 +144,10 @@ class get_freeSpace {
         buildings = buildings.concat(this.room.find(FIND_MY_CONSTRUCTION_SITES, {
             filter : (s) => s.structureType != STRUCTURE_ROAD && s.structureType != STRUCTURE_RAMPART, 
         }))
+
+        buildings = buildings.concat(this.room.find(FIND_STRUCTURES, {
+            filter : (s) => s.structureType == STRUCTURE_WALL
+        }))
         buildings.push(this.room.controller);
         for(let i in buildings){
             let building = buildings[i];
@@ -151,12 +155,14 @@ class get_freeSpace {
             let tile = this.get_tile_word(pos.x, pos.y);
             if(tile){
                 tile.type = -2;
-                tile.building = building.structureType;
-                tile.gid = building.id;
-                this.buildings.push(tile.id);
-                this.existing.push({ x : pos.x, y : pos.y, 
+                if(building.structureType != STRUCTURE_WALL){
+                    tile.building = building.structureType;
+                    tile.gid = building.id;
+                    this.buildings.push(tile.id);
+                    this.existing.push({ x : pos.x, y : pos.y, 
                     index : pos.x * 50 + pos.y, type : building.structureType, id : building.id});
-            }else{
+                }
+            }else if(building.structureType != STRUCTURE_WALL){
                 this.existing.push({ x : pos.x, y : pos.y, 
                     index : pos.x * 50 + pos.y, type : building.structureType, id : building.id, outside : true});
             }
