@@ -62,7 +62,6 @@ class get_freeSpace {
                 y : t.y,
                 type : t.building,
                 id : t.gid,
-                index : t.id,
             })
         }
 
@@ -156,10 +155,10 @@ class get_freeSpace {
                 tile.gid = building.id;
                 this.buildings.push(tile.id);
                 this.existing.push({ x : pos.x, y : pos.y, 
-                    index : pos.x * 50 + pos.y, type : building.structureType, id : building.id });
+                    index : pos.x * 50 + pos.y, type : building.structureType, id : building.id});
             }else{
                 this.existing.push({ x : pos.x, y : pos.y, 
-                    index : pos.x * 50 + pos.y, type : building.structureType, id : building.id });
+                    index : pos.x * 50 + pos.y, type : building.structureType, id : building.id, outside : true});
             }
         }
     }

@@ -28,6 +28,7 @@ module.exports = class buildingPlacement{
         this.roads = map.roads;
         this.center = map.base;
         this.final = {};
+        this.inbase = {};
         this.terrain = room.getTerrain();
         this.room = room;
         this.circ = this.size * 4;
@@ -48,9 +49,12 @@ module.exports = class buildingPlacement{
             }
         }
 
+        this.existing = map.existing;
+        this.connect_targets =  [];
         for(let i in map.existing){
             let tile = map.existing[i];
             this.final[tile.index] = tile;
+            this.connect_targets.push(room.getPositionAt(tile.x, tile.y));
         }
         for(let i in remove_arr){
             this.remove_tile(remove_arr[i]);
@@ -63,34 +67,85 @@ module.exports = class buildingPlacement{
         this.final[tile.index] = tile;
     }
 
+    /** @param {RoomPosition} pos **/
+    get_near_side(arr){
+        let ret = [];
+        for(let pos of arr){
+            this.add_inRange(pos, (x, y) => {
+                if(this.terrain.get(x,y) != 1){
+                    ret.push(this.room.getPositionAt(x, y));
+                }
+            })
+        }
+        return ret;
+    }
+
     close_data(){
         this.roads = this.create_roads();
-        let sources = this.room.find(FIND_SOURCES);
-        sources = sources.concat(this.room.find(FIND_MINERALS));
+        let sources = this.room.find(FIND_MINERALS);
+        sources = sources.concat(this.room.find(FIND_SOURCES));
 
+        let ex = [];
         for(let i = 1; i <= 7; i += 2){
-            console.log(this.room.findExitTo(i), 'exit', i);
+            let exits = this.room.find(i);
+            if(!exits.length)
+                continue;
+            exits = this.get_near_side(exits);
+            let sdist = 10000;
+            let exit = null;
+            for(let pos of exits){
+                let dist = this.distance(pos.x, pos.y, this.center.x, this.center.y);
+                if(sdist > dist){
+                    sdist = dist;
+                    exit = pos;
+                }
+            }
+            if(exit){
+                ex.push(exit);
+            }
         }
-        for(let i in sources){
-            let source = sources[i];
+
+        let ret = {};
+        sources = sources.concat(this.connect_targets);
+        sources = sources.concat(ex);
+        this.connect_roads(sources, this.roads, ret);
+        this.connect_roads(sources, this.roads, this.roads);
+
+        for(let i in ret){
+            let tile = ret[i];
+            this.roads[tile.index] = tile;
+        }
+
+        for(let pos of ex){
+            let index = pos.x * 50 + pos.y;
+            this.roads[index] = { x : pos.x, y : pos.y, index : index };
+        }
+    }
+
+    connect_roads(arr = [], roads = {}, ret = {}){
+        for(let pos of arr){
+            //console.log(pos);
+            if(!(pos instanceof RoomPosition))
+                pos = pos.pos;
+            //console.log("got it?");
             let r = null;
-            let distance = 1000;
-            for(let j in this.roads){
-                let tile = this.roads[j];
-                // let path = sources[i].pos.findPathTo(tile.x, tile.y, {
-                //     ignoreRoads : true,
-                //     swampCost : 1,
-                //     plainCost : 1,
-                // });
-                let dist = source.pos.getRangeTo(tile.x, tile.y);
-                if(distance >= dist){
-                    distance = dist;
+            let sdist = 1000;
+            for(let j in roads){
+                let tile = roads[j];
+                let dist = this.distance(pos.x, pos.y, tile.x, tile.y);
+                if(sdist >= dist && dist > 2){
+                    sdist = dist;
                     r = tile;
                 }
             }
-            for(let pos of source.pos.findPathTo(r.x, r.y)){
-                let index = pos.x * 50 + pos.y;
-                this.roads[index] = { x : pos.x, y : pos.y, index : index };
+            for(let rpos of pos.findPathTo(r.x, r.y)){
+                //console.log(JSON.stringify(rpos));
+                let index = rpos.x * 50 + rpos.y;
+                if(this.final[index])
+                    break;
+                //console.log("??", index);
+                ret[index] = { x : rpos.x, y : rpos.y, index : index };
+                //console.log(JSON.stringify(rpos));
             }
         }
     }
@@ -99,9 +154,15 @@ module.exports = class buildingPlacement{
         let arr = {};
         for(let i in this.final){
             let tile = this.final[i];
-            this.add_inRange(tile, (t) => {
-                if(!t.type && this.terrain.get(t.x, t.y) != 1){
-                    arr[t.index] = t;
+            if(tile.outside)
+                continue;
+            this.add_inRange(tile, (x, y) => {
+                if(this.terrain.get(x, y) == 1)
+                    return;
+                let index = x * 50 + y;
+                let t = this.final[index];
+                if(!t){
+                    arr[index] = { x : x, y : y, index : index };
                 }
             })
         } 
@@ -113,13 +174,9 @@ module.exports = class buildingPlacement{
             for(let _gridX = -1; _gridX < 2; _gridX++){
                 let x1 = _gridX + tile.x;
                 let y1 = _gridY + tile.y;
-                if(y1 >= 50 || x1 >= 50 || x1 < 0 || y1 < 0)
+                if(y1 >= 49 || x1 >= 49 || x1 < 1 || y1 < 1)
                     continue;
-                let index = x1 * 50 + y1;
-                let t = this.final[index];
-                if(!t){
-                    to_do({ x : x1, y : y1, index : index });
-                }
+                to_do(x1, y1);
             }
         }
     }
