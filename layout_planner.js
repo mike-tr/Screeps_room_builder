@@ -48,6 +48,8 @@ class get_freeSpace {
         obj.buildings = this.sort_by_distance(build_arr);
         obj.roads = this.sort_by_distance(this.roads);
         obj.base = this.base;
+        obj.size = this.size;
+        obj.existing = this.existing;
         return obj;
     }
 
@@ -60,11 +62,14 @@ class get_freeSpace {
                 y : t.y,
                 type : t.building,
                 id : t.gid,
+                index : t.id,
             })
         }
 
+        let x = this.base.x;
+        let y = this.base.y;
         return carr.sort((a, b) => {
-            return this.distance(a.x, a.y, this.base.x, this.base.y) - this.distance(b.x, b.y, this.base.x, this.base.y);
+            return this.distance(a.x, a.y, x, y) - this.distance(b.x, b.y, x, y);
         });
     }
 
@@ -94,15 +99,16 @@ class get_freeSpace {
             for(let gridX = 0; gridX < this.size; gridX++){
                 let type = rmap.get(gridX + this.x_offset, gridY + this.y_offset);
                 let tile = this.map[gridY * this.size + gridX];
+                let dist = this.distance(x, y, gridX + this.x_offset, gridY + this.y_offset);
                 //let type = Math.random() > 0.98 ? 1 : 0;
                 if(type == 1){
                     tile.type = -1;
                     tile.range = -1;
-                }else if(this.distance(x, y, gridX + this.x_offset, gridY + this.y_offset) <= 0){
+                }else if(dist <= 0){
                     tile.type = 0;
                     tile.range = 0;
                     this.base_arr.push(tile.id);
-                }else if(gridX == 0 || gridY == 0 || gridX == this.size - 1 || gridY == this.size - 1){
+                }else if(dist > this.size * this.size * 0.17){
                     tile.type = -3;
                     this.range = -1;
                     this.corners.push(tile.id);
@@ -123,7 +129,8 @@ class get_freeSpace {
         this.calculateMap(); 
         let corners = [];
         for(let i of this.corners){
-            if(this.map[i].range > 0){
+            let tile = this.map[i];
+            if(tile.range > 0 && tile.range < this.size * 0.54){
                 corners.push(i);
             }
         }
@@ -131,20 +138,28 @@ class get_freeSpace {
     }
 
     add_buildings(){
+        this.existing = [];
         let buildings = this.room.find(FIND_MY_STRUCTURES, {
             filter : (s) => s.structureType != STRUCTURE_ROAD && s.structureType != STRUCTURE_RAMPART, 
         });
         buildings = buildings.concat(this.room.find(FIND_MY_CONSTRUCTION_SITES, {
             filter : (s) => s.structureType != STRUCTURE_ROAD && s.structureType != STRUCTURE_RAMPART, 
         }))
+        buildings.push(this.room.controller);
         for(let i in buildings){
-            let pos = buildings[i].pos;
+            let building = buildings[i];
+            let pos = building.pos;
             let tile = this.get_tile_word(pos.x, pos.y);
             if(tile){
                 tile.type = -2;
-                tile.building = buildings[i].structureType;
-                tile.gid = buildings[i].id;
+                tile.building = building.structureType;
+                tile.gid = building.id;
                 this.buildings.push(tile.id);
+                this.existing.push({ x : pos.x, y : pos.y, 
+                    index : pos.x * 50 + pos.y, type : building.structureType, id : building.id });
+            }else{
+                this.existing.push({ x : pos.x, y : pos.y, 
+                    index : pos.x * 50 + pos.y, type : building.structureType, id : building.id });
             }
         }
     }
@@ -235,14 +250,14 @@ class get_freeSpace {
     check_legit(){
         for(let i of this.buildings){
             let tile = this.map[i];
-            if(tile.range < 0 || tile.range > this.size * 0.6){
+            if(tile.srange && (tile.range < 0 || (tile.range * 0.95 > tile.srange))){
                 return false;
             }
         }
 
         for(let i of this.corners){
             let tile = this.map[i];
-            if(tile.range < 0 || tile.range > this.size * 0.55){
+            if(tile.range < 0 || (tile.range * 0.95 > tile.srange)){
                 return false;
             }
         }
@@ -282,9 +297,11 @@ class get_freeSpace {
                     if(target.range < 0 || target.range > value){
                         target.range = value;
                         if(target.type >= 0){
-                            if(!this.init && target.type == 0){
-                                this.possible.push(target.id);
-                                //console.log(tile.gridX, tile.gridY)
+                            if(!this.init){
+                                target.srange = value;
+                                if(target.type == 0){
+                                    this.possible.push(target.id);
+                                }
                             }
                             arr.push(target.id);
                         }

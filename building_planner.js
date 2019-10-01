@@ -1,290 +1,359 @@
 module.exports = class buildingPlacement{
-    /** @param {Room} room **/
-   constructor(map, room){
-       this.map = map;
-       this.buildings = {
-           spawn : { ids : [] },
-           extension : { ids : [] },
-           lab : { ids : [] },
-           link : { ids : [] },
-           nuker : { ids : [] },
-           storage : { ids : [] },
-           terminal : { ids : [] }, 
-           tower : { ids : [] }, 
-           powerSpawn : { ids : [] },
-           observer : { ids : [] },
-           factory : { ids : [] },
-       };
-       
-       this.all = [];
-       let start = 0;
-       console.log(room);
-       for(let i in map.buildings){
-           let tile = map.buildings[i]; 
-           tile.index = start;
-           this.all.push(tile);
-           start++;  
-       }
+        /** @param {Room} room **/
+    constructor(map, room){
+        this.map = map;
+        this.buildings = {
+            spawn : { ids : [] },
+            extension : { ids : [] },
+            lab : { ids : [] },
+            link : { ids : [] },
+            nuker : { ids : [] },
+            storage : { ids : [] },
+            terminal : { ids : [] }, 
+            tower : { ids : [] }, 
+            powerSpawn : { ids : [] },
+            observer : { ids : [] },
+            factory : { ids : [] },
+        };
+        
+        this.all = [];
+        //let start = 0;
+        for(let i in map.buildings){
+            let tile = map.buildings[i]; 
+            tile.index = tile.x * 50 + tile.y;
+            this.all.push(tile);
+        }
 
-       this.open = map.buildings;
-       this.roads = map.roads;
-       this.center = map.base;
+        this.open = map.buildings;
+        this.roads = map.roads;
+        this.center = map.base;
+        this.final = {};
+        this.terrain = room.getTerrain();
+        this.room = room;
+        this.circ = this.size * 4;
 
-       let remove_arr = [];
-       let sources = room.find(FIND_SOURCES);
-       for(let i in this.open){
-           let tile = this.open[i];
-           if(tile.id)
-               continue;
-           for(let i in sources){
-               let source = sources[i];
-               let distance = this.distance(source.pos.x, source.pos.y, tile.x, tile.y);
-               if(distance <= 5){
-                       remove_arr.push(tile);
-                   break;
-               }
-           }
-       }
-       console.log(JSON.stringify(remove_arr), 'rem');
-       for(let i in remove_arr){
-           this.remove_tile(remove_arr[i]);
-       }
-   }
+        let remove_arr = [];
+        let sources = room.find(FIND_SOURCES);
+        for(let i in this.open){
+            let tile = this.open[i];
+            if(tile.id)
+                continue;
+            for(let i in sources){
+                let source = sources[i];
+                let distance = this.distance(source.pos.x, source.pos.y, tile.x, tile.y);
+                if(distance <= 5){
+                        remove_arr.push(tile);
+                    break;
+                }
+            }
+        }
 
-   set_arr(arr, arr_type){
-       for(let i in arr){
-           let type = arr_type[i];
-           let tile = arr[i];
-           tile.type = type;
-           this.buildings[type].ids.push(tile.index);
-           this.remove_tile(tile);
-       }
-   }
+        for(let i in map.existing){
+            let tile = map.existing[i];
+            this.final[tile.index] = tile;
+        }
+        for(let i in remove_arr){
+            this.remove_tile(remove_arr[i]);
+        }
+    }
 
-   get_road_inrange(x, y, r){
-       let arr = [];
-       for(let i in this.roads){
-           let road = this.roads[i];
-           if(this.distance(x, y, road.x, road.y) <= r){
-               arr.push(road);
-           }
-       }
-       return arr;
-   }
+    set_building(tile, type){
+        tile.type = type;
+        this.buildings[type].ids.push(tile.index);
+        this.final[tile.index] = tile;
+    }
 
-   get_type(itype){
-       for(let i in this.open){
-           let t = this.open[i];
-           if(t.type == itype){
-               return t;
-           }
-       }
-   }
+    close_data(){
+        this.roads = this.create_roads();
+        let sources = this.room.find(FIND_SOURCES);
+        sources = sources.concat(this.room.find(FIND_MINERALS));
 
-   get_types(arr){
-       let ret = [];
-       let del = [];
-       for(let i in this.open){
-           let found = false;
-           let t = this.open[i];
-           for(let type of arr){
-               if(t.type == type){
-                   ret.push(t);
-                   del.push(type);
-               }
-           }
-       }
+        for(let i = 1; i <= 7; i += 2){
+            console.log(this.room.findExitTo(i), 'exit', i);
+        }
+        for(let i in sources){
+            let source = sources[i];
+            let r = null;
+            let distance = 1000;
+            for(let j in this.roads){
+                let tile = this.roads[j];
+                // let path = sources[i].pos.findPathTo(tile.x, tile.y, {
+                //     ignoreRoads : true,
+                //     swampCost : 1,
+                //     plainCost : 1,
+                // });
+                let dist = source.pos.getRangeTo(tile.x, tile.y);
+                if(distance >= dist){
+                    distance = dist;
+                    r = tile;
+                }
+            }
+            for(let pos of source.pos.findPathTo(r.x, r.y)){
+                let index = pos.x * 50 + pos.y;
+                this.roads[index] = { x : pos.x, y : pos.y, index : index };
+            }
+        }
+    }
 
-       console.log(del, arr);
-       for(let d of del){
-           let id = arr.indexOf(d);
-           if(id >= 0)
-               arr.splice(id, 1);
-       }
+    create_roads(){
+        let arr = {};
+        for(let i in this.final){
+            let tile = this.final[i];
+            this.add_inRange(tile, (t) => {
+                if(!t.type && this.terrain.get(t.x, t.y) != 1){
+                    arr[t.index] = t;
+                }
+            })
+        } 
+        return arr;
+    }
 
-       return ret;
-   }
+    add_inRange(tile, to_do){
+        for(let _gridY = -1; _gridY < 2; _gridY++){
+            for(let _gridX = -1; _gridX < 2; _gridX++){
+                let x1 = _gridX + tile.x;
+                let y1 = _gridY + tile.y;
+                if(y1 >= 50 || x1 >= 50 || x1 < 0 || y1 < 0)
+                    continue;
+                let index = x1 * 50 + y1;
+                let t = this.final[index];
+                if(!t){
+                    to_do({ x : x1, y : y1, index : index });
+                }
+            }
+        }
+    }
 
-   get_roads_from(arr){
-       let ret = {}
-       let p = 0;
+    set_arr(arr, arr_type){
+        for(let i in arr){
+            let type = arr_type[i];
+            let tile = arr[i];
+            this.set_building(tile, type);
+            this.remove_tile(tile);
+        }
+    }
 
-       let types = {};
-       for(let t of arr){
-           if(!types[t.type]){
-               p++;
-               types[t.type] = true;
-           }
-           for(let r of this.get_road_inrange(t.x, t.y, 3)){
-               if(ret[r.index]){
-                   ret[r.index].n++;
-               }else{
-                   ret[r.index] = { n : 1, road : r };
-               }
-           }
-       }
+    get_road_inrange(x, y, r){
+        let arr = [];
+        for(let i in this.roads){
+            let road = this.roads[i];
+            if(this.distance(x, y, road.x, road.y) <= r){
+                arr.push(road);
+            }
+        }
+        return arr;
+    }
 
-       let rr = [];
-       for(let r in ret){
-           let o = ret[r];
-           if(o.n >= p){
-               rr.push(o.road);
-           }
-       }
-       return rr;
-   }
+    get_type(itype){
+        for(let i in this.open){
+            let t = this.open[i];
+            if(t.type == itype){
+                return t;
+            }
+        }
+    }
 
-   remove_tile(tile){
-       let id = this.open.indexOf(tile);
-       if(id >= 0)
-           this.open.splice(id, 1);
-   }
+    get_types(arr){
+        let ret = [];
+        let del = [];
+        for(let i in this.open){
+            let found = false;
+            let t = this.open[i];
+            for(let type of arr){
+                if(t.type == type){
+                    ret.push(t);
+                    del.push(type);
+                }
+            }
+        }
 
-   get_closest(count, max_range, itype, set, in_list){
-       if(count == 0)
-           return null;
+        for(let d of del){
+            let id = arr.indexOf(d);
+            if(id >= 0)
+                arr.splice(id, 1);
+        }
 
-       if(!in_list)
-           in_list = this.roads;
-       console.log(count, in_list);
-       for(let i in in_list){
-           let r = in_list[i];
-           let get = this.get_closest_to(r.x, r.y, count, itype);
-           if(get.ranges && get.ranges[count - 1].d <= max_range){
-               if(set && itype){
-                   return this.set_tiles(get.obj, itype);
-               }
-               return get.obj;
-           }
-       }
-       return null;
-   }
+        return ret;
+    }
 
-   get_closest_to(x, y, count, itype, set){
-       let arr = [];
-       let ex = [];
-       for(let i in this.open){
-           let tile = this.open[i];
-           if(tile.type){
-               if(tile.type == itype){
-                   arr.push({ id : i, d : 0 });
-               }
-               continue;
-           }
-           let dist = this.distance(x, y, tile.x, tile.y);
-           arr.push({ id : i, d : dist });
-       }
-       if(arr.length == 0){
-           return null;
-       }
+    get_roads_from(arr){
+        let ret = {}
+        let p = 0;
 
-       arr.sort((a, b) => a.d - b.d);
-       arr = arr.slice(0, count);
-       arr = arr.concat(ex);
+        let types = {};
+        for(let t of arr){
+            if(!types[t.type]){
+                p++;
+                types[t.type] = true;
+            }
+            for(let r of this.get_road_inrange(t.x, t.y, 3)){
+                if(ret[r.index]){
+                    ret[r.index].n++;
+                }else{
+                    ret[r.index] = { n : 1, road : r };
+                }
+            }
+        }
 
-       let ret= [];
-       for(let i in arr){
-           ret.push(this.open[arr[i].id]);
-       }
-       if(set && itype)
-           return this.set_tiles(ret, itype);
-       return { ranges : arr, obj : ret };
-   }
+        let rr = [];
+        for(let r in ret){
+            let o = ret[r];
+            if(o.n >= p){
+                rr.push(o.road);
+            }
+        }
+        return rr;
+    }
 
-   set_tiles(tiles, type){
-       if(!type)   
-           return;
-       for(let i in tiles){
-           let tile = tiles[i];
-           tile.type = type;
-           this.buildings[type].ids.push(tile.index);
-           this.remove_tile(tile);
-       }
-       return tiles;   
-   }
+    remove_tile(tile){
+        let id = this.open.indexOf(tile);
+        if(id >= 0){
+            //this.final[tile.index] = tile;
+            this.open.splice(id, 1);
+        }
+    }
 
-   update_tiles(tiles){
-       console.log(JSON.stringify(tiles));
-       for(let i in tiles){
-           let tile = tiles[i];
-           console.log(JSON.stringify(tile), 'update');
-           this.buildings[tile.type].ids.push(tile.index);
-           this.remove_tile(tile);
-       }
-   }
+    get_closest(count, max_range, itype, set, in_list){
+        if(count == 0)
+            return null;
 
-   checkOverlaping(overlaps, skip, radius, count, type){
-       for(let i in this.open){
-           if(skip > 0){
-               skip--;
-               continue;
-           }
-           let tile = this.open[i];
-           if(tile.type && tile.type != type)
-               continue;
-           let arr = this.get_withinRange(this.open, tile, radius, type);
-           if(arr.length >= count){
-               let v = this.check_overload(overlaps, arr, radius, count);
-               if(v){
-                   v = v.slice(0, count);
-                   return this.set_tiles(v, type);
-               }
-               //console.log('found one!', JSON.stringify(tile));
-           }
-       }
-       console.log('didnt find anything :(');
-       return null;
-   }
+        if(!in_list)
+            in_list = this.roads;
+        for(let i in in_list){
+            let r = in_list[i];
+            let get = this.get_closest_to(r.x, r.y, count, itype);
+            if(get && get.ranges[count - 1].d <= max_range){
+                if(set && itype){
+                    return this.set_tiles(get.obj, itype);
+                }
+                return get.obj;
+            }
+        }
+        return null;
+    }
 
-   check_overload(times, arr, radius, count){
-       for(let i = 0; i < times; i++){
-           if(arr){
-               arr = this.check_more_connections(times, arr, radius, count);
-           }
-       }
-       return arr;
-   }
+    get_closest_to(x, y, count, itype, set){
+        let arr = [];
+        let ex = [];
+        for(let i in this.open){
+            let tile = this.open[i];
+            if(tile.type){
+                if(tile.type == itype){
+                    arr.push({ id : i, d : 0 });
+                }
+                continue;
+            }
+            let dist = this.distance(x, y, tile.x, tile.y);
+            arr.push({ id : i, d : dist });
+        }
+        if(arr.length == 0){
+            return null;
+        }
 
-   check_more_connections(skip, arr, range, count){
-       let first = arr[0];
-       for(let i in arr){
-           if(skip > 0){
-               skip--;
-               continue;
-           }
-           let tile = arr[i];
-           let arr2 = this.get_withinRange(arr, tile, range);
-           if(arr2.length >= count){
-               arr2 = arr2.sort((a) => this.tile_distance(a, first));
-               return arr2;
-           }
-       }
-       return null;
-   }
+        arr.sort((a, b) => a.d - b.d);
+        arr = arr.slice(0, count);
+        arr = arr.concat(ex);
 
-   get_withinRange(arr, tile, r, type){
-       let ret = [];
-       ret.push(tile);
-       for(let i in arr){
-           let t = arr[i];
-           
-           if(t == tile || (t.type && t.type != type)) 
-               continue;
-           let d = this.tile_distance(t, tile);
-           if(d <= r){
-               t.range = d;
-               ret.push(t);
-           }
-       }
-       //console.log(ret.length);
-       return ret;
-   }
+        let ret= [];
+        for(let i in arr){
+            ret.push(this.open[arr[i].id]);
+        }
+        if(set && itype)
+            return this.set_tiles(ret, itype);
+        return { ranges : arr, obj : ret };
+    }
 
-   tile_distance(tileA, tileB){
-       return (tileA.x - tileB.x) ** 2 + (tileA.y - tileB.y) ** 2;
-   }
+    set_tiles(tiles, type){
+        if(!type)   
+            return;
+        for(let i in tiles){
+            let tile = tiles[i];
+            this.set_building(tile, type);
+            this.remove_tile(tile);
+        }
+        return tiles;   
+    }
 
-   distance(x1, y1, x2, y2){
-       return (x1 - x2) ** 2 + (y1 - y2) ** 2;
-   }
+    update_tiles(tiles){
+        for(let i in tiles){
+            let tile = tiles[i];
+            this.set_building(tile, tile.type);
+            this.remove_tile(tile);
+        }
+    }
+
+    checkOverlaping(overlaps, skip, radius, count, type){
+        for(let i in this.open){
+            if(skip > 0){
+                skip--;
+                continue;
+            }
+            let tile = this.open[i];
+            if(tile.type && tile.type != type)
+                continue;
+            let arr = this.get_withinRange(this.open, tile, radius, type);
+            if(arr.length >= count){
+                let v = this.check_overload(overlaps, arr, radius, count);
+                if(v){
+                    v = v.slice(0, count);
+                    return this.set_tiles(v, type);
+                }
+                //console.log('found one!', JSON.stringify(tile));
+            }
+        }
+        console.log('didnt find anything :(');
+        return null;
+    }
+
+    check_overload(times, arr, radius, count){
+        for(let i = 0; i < times; i++){
+            if(arr){
+                arr = this.check_more_connections(times, arr, radius, count);
+            }
+        }
+        return arr;
+    }
+
+    check_more_connections(skip, arr, range, count){
+        let first = arr[0];
+        for(let i in arr){
+            if(skip > 0){
+                skip--;
+                continue;
+            }
+            let tile = arr[i];
+            let arr2 = this.get_withinRange(arr, tile, range);
+            if(arr2.length >= count){
+                arr2 = arr2.sort((a) => this.tile_distance(a, first));
+                return arr2;
+            }
+        }
+        return null;
+    }
+
+    get_withinRange(arr, tile, r, type){
+        let ret = [];
+        ret.push(tile);
+        for(let i in arr){
+            let t = arr[i];
+            
+            if(t == tile || (t.type && t.type != type)) 
+                continue;
+            let d = this.tile_distance(t, tile);
+            if(d <= r){
+                t.range = d;
+                ret.push(t);
+            }
+        }
+        //console.log(ret.length);
+        return ret;
+    }
+
+    tile_distance(tileA, tileB){
+        return (tileA.x - tileB.x) ** 2 + (tileA.y - tileB.y) ** 2;
+    }
+
+    distance(x1, y1, x2, y2){
+        return (x1 - x2) ** 2 + (y1 - y2) ** 2;
+    }
 }

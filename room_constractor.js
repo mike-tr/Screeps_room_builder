@@ -109,7 +109,8 @@ module.exports = {
                 planner.enabled = false;
             }
         }else if(room.find(FIND_MY_CONSTRUCTION_SITES).length < 5){
-            for(let tile of room.memory.planner.roads){
+            for(let t in room.memory.planner.roads){
+                let tile = room.memory.planner.roads[t];
                 if(!Game.getObjectById(tile.id)){
                     let response = room.lookForAt(LOOK_STRUCTURES, tile.x, tile.y);
                     if(response.length > 0){
@@ -119,7 +120,7 @@ module.exports = {
                         if(response.length > 0){
                             tile.id = response[0].id;
                         }else{
-                            room.createConstructionSite(tile.x, tile.y, "road");
+                            //room.createConstructionSite(tile.x, tile.y, "road");
                             return;
                         }
                     }

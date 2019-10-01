@@ -1,4 +1,4 @@
-var layout_class = require('./llayout_planner');
+var layout_class = require('./layout_planner');
 var buildings_buildings = require('./building_planner');
 
 //create a ghost for storage + spawn + link + terminal
@@ -27,13 +27,16 @@ module.exports = {
     
     /** @param {Room} room **/
     createBase : function(room, x, y){
-        let layout = layout_class.test(room, 17,x - 8,y - 8, x, y);
+        const size = 25;
+        const offset  = Math.floor(size / 2);
+        let layout = layout_class.test(room, size, x - offset, y - offset, x, y);
         while(layout.add_build_place()){}
         //layout.set_buildings_count(86);
         let buildings = new buildings_buildings(layout.get_map_object(), room);
         let center = buildings.center;
 
         add_sslt(buildings, [STRUCTURE_SPAWN, STRUCTURE_STORAGE, STRUCTURE_TERMINAL, STRUCTURE_LINK]);
+
         buildings.get_closest_to(center.x, center.y, 1, STRUCTURE_POWER_SPAWN, true);
         buildings.get_closest_to(center.x, center.y, 1, 'factory', true);
         buildings.get_closest_to(center.x, center.y, 1, STRUCTURE_NUKER, true);
@@ -42,8 +45,9 @@ module.exports = {
         buildings.get_closest_to(center.x, center.y, 6, STRUCTURE_TOWER, true);
         buildings.checkOverlaping(1, 8, 5, 10, STRUCTURE_LAB);
         buildings.get_closest_to(center.x, center.y, 60, STRUCTURE_EXTENSION, true);
+        buildings.close_data();
 
-        room.memory.planner = { indexes : buildings.buildings, buildings : buildings.all, roads : buildings.roads };
+        room.memory.planner = { indexes : buildings.buildings, buildings : buildings.final, roads : buildings.roads };
         return { map : layout.map, bclass : buildings, b_list : buildings.buildings };
     }
 }

@@ -33,3 +33,12 @@ global.drawLayout = function(room, structure = true){
         }
     }
 }
+
+global.drawRoads = function(room){
+    let test = room.memory.planner;
+    for(let j in test.roads){
+        let p = test.roads[j];
+        let t = p.type;
+        room.visual.circle(p.x, p.y, {fill: 'gray', radius: 0.25, stroke: 'gray'});
+    }
+}
