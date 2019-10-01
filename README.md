@@ -20,11 +20,14 @@ recommended use for new bases
 examples -
 
 simulation!
+
 ![alt text](https://i.gyazo.com/548e3b7b0bc0d241e1c12d3d4e2f07c7.png)
 
 room with some constructions before
+
 ![alt text](https://i.gyazo.com/54b0a4095365215b2fbbca7d3ce6094e.png)
 
 room with spawn only
+
 ![alt text](https://i.gyazo.com/cf05a315d83d6d2388a7088efd500bdd.png)
 
