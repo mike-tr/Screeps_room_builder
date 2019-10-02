@@ -13,11 +13,15 @@ module.exports.loop = function () {
 
     // initialize and save to memory the layout
     // set room.memory.planner = null to reset the layout!
+    const tests = 2;
     let time = new Date().getTime();
-    base.init(room);
+    for(let i = 0; i < tests; i++){
+        reset();
+        base.init(room);
+    }
+    console.log((new Date().getTime() - time) / tests, 'avg_' + tests + ' initialization time!');
     base.loop(room);
-    console.log(new Date().getTime() - time, 'initialization time!');
- 
+
     drawLayout(room);
     drawRoads(room);
     console.log('---------------------------------------');
