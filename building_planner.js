@@ -53,7 +53,8 @@ constructor(map, room){
     this.connect_targets =  [];
     for(let i in map.existing){
         let tile = map.existing[i];
-        this.final[tile.index] = tile;
+        if(tile.type != 'controller')
+            this.final[tile.index] = tile;
         this.connect_targets.push(room.getPositionAt(tile.x, tile.y));
     }
     for(let i in remove_arr){
@@ -103,6 +104,8 @@ close_data(){
     let ret = {};
     sources = sources.concat(this.connect_targets);
     sources = sources.concat(ex);
+    sources = this.conncet_neighbours(sources);
+
     this.connect_roads(sources, this.roads, ret);
     this.connect_roads(sources, this.roads, this.roads);
 
@@ -123,11 +126,62 @@ close_data(){
     });
 }
 
+/** @param {RoomPosition[]} arr **/
+conncet_neighbours(arr = []){
+    let ret = [];
+    let saved = {};
+    this.ob = {};
+    for(let i = 0; i < arr.length; i++){
+        let pos = arr[i];
+        if(!(pos instanceof RoomPosition)){
+            pos = pos.pos;
+        }
+        if(saved[pos.x *2 + pos.y]){
+            continue;
+        }
+        for(let k = i + 1; k < arr.length; k++){
+            let posb = arr[k];
+            if(!(posb instanceof RoomPosition)){
+                posb = posb.pos;
+            }
+            if(pos.x == posb.x && posb.y == pos.y)
+                continue;
+            if(pos.getRangeTo(posb) <= 2){
+                let range = 50000;
+                let add = null;
+                this.add_inRange(pos, (x, y) => {
+                    if(x == pos.x && y == pos.y || x == posb.x && y == posb.y)
+                        return;
+                    if(this.terrain.get(x,y) != 1){
+                        if(posb.getRangeTo(x, y) == 1){
+                            saved[pos.x * 2 + pos.y] = true;
+                            saved[posb.x * 2 + posb.y] = true;
+                            let dist = this.distance(x, y, this.center.x, this.center.y);
+                            if(dist < range){
+                                add = this.room.getPositionAt(x, y);
+                                range = dist;
+                            }
+                        }
+                    }
+                })
+                if(add){
+                    ret.push(add);
+                }
+            }
+        }
+        if(saved[pos.x *2 + pos.y]){
+            continue;
+        }
+        saved[pos.x *2 + pos.y] = true;
+        ret.push(pos);
+    }
+    console.log(ret);
+    return ret;
+}
+
+/** @param {RoomPosition[]} arr **/
 connect_roads(arr = [], roads = {}, ret = {}){
     for(let pos of arr){
-        //console.log(pos);
-        if(!(pos instanceof RoomPosition))
-            pos = pos.pos;
         //console.log("got it?");
         let r = null;
         let sdist = 10000;
@@ -139,14 +193,19 @@ connect_roads(arr = [], roads = {}, ret = {}){
                 r = tile;
             }
         }
-        for(let rpos of pos.findPathTo(r.x, r.y, { ignoreRoad : true, swampCost : 1 })){
+
+        for(let rpos of pos.findPathTo(r.x, r.y, { ignoreRoad : true, swampCost : 1, reusePath : 25 })){
             //console.log(JSON.stringify(rpos));
             let index = rpos.x * 50 + rpos.y;
-            if(this.final[index])
-                break;
             //console.log("??", index);
             ret[index] = { x : rpos.x, y : rpos.y, index : index };
             //console.log(JSON.stringify(rpos));
+        }
+        
+        let ir = pos.lookFor(LOOK_STRUCTURES).filter((s) => s.structureType == 'road').length;
+        if(pos.look().length <= 1 + ir){
+            let index = pos.x * 50 + pos.y;
+            ret[index] = { x : pos.x, y : pos.y, index : index };
         }
     }
 }
