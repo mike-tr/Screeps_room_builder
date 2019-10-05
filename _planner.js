@@ -11,6 +11,11 @@ const add_sslt = function(buildings, types, rem_arr = []){
         buildings.update_tiles(existing);
         return true;
     }else if(rem_arr.length == 0){
+        console.log(existing.length, types.length == 0);
+        if(types.length == 0){
+            buildings.update_tiles(existing);
+            return true;
+        }
         if(!add_sslt(buildings, [STRUCTURE_SPAWN, STRUCTURE_STORAGE, STRUCTURE_TERMINAL], ['link'])){
             if(!add_sslt(buildings, [STRUCTURE_LINK, STRUCTURE_STORAGE, STRUCTURE_TERMINAL], ['spawn'])){
                 if(!add_sslt(buildings, [STRUCTURE_STORAGE, STRUCTURE_TERMINAL], ['link', 'spawn'])){
@@ -39,7 +44,7 @@ module.exports = {
 
         let arr = buildings.get_type("lab", false);
         buildings.checkOverlaping_v2(buildings.open, arr, 2, 5, 10, "lab");
-        
+
         buildings.get_closest_to(center.x, center.y, 1, STRUCTURE_POWER_SPAWN, true);
         buildings.get_closest_to(center.x, center.y, 1, 'factory', true);
         buildings.get_closest_to(center.x, center.y, 1, STRUCTURE_NUKER, true);
