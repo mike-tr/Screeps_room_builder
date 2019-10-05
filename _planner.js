@@ -37,13 +37,16 @@ module.exports = {
 
         add_sslt(buildings, [STRUCTURE_SPAWN, STRUCTURE_STORAGE, STRUCTURE_TERMINAL, STRUCTURE_LINK]);
 
+        let arr = buildings.get_type("lab", false);
+        buildings.checkOverlaping_v2(buildings.open, arr, 2, 5, 10, "lab");
+        
         buildings.get_closest_to(center.x, center.y, 1, STRUCTURE_POWER_SPAWN, true);
         buildings.get_closest_to(center.x, center.y, 1, 'factory', true);
         buildings.get_closest_to(center.x, center.y, 1, STRUCTURE_NUKER, true);
         buildings.get_closest_to(center.x, center.y, 1, STRUCTURE_OBSERVER, true);
         buildings.get_closest_to(center.x, center.y, 2, STRUCTURE_SPAWN, true);
         buildings.get_closest_to(center.x, center.y, 6, STRUCTURE_TOWER, true);
-        buildings.checkOverlaping(1, 8, 5, 10, STRUCTURE_LAB);
+        //buildings.checkOverlaping(arr, 1, skip, 5, 10, STRUCTURE_LAB);
         buildings.get_closest_to(center.x, center.y, 60, STRUCTURE_EXTENSION, true);
         buildings.close_data();
 

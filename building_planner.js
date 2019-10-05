@@ -261,13 +261,21 @@ get_road_inrange(x, y, r){
     return arr;
 }
 
-get_type(itype){
+get_type(itype, single = true){
+    let ret = [];
     for(let i in this.open){
         let t = this.open[i];
         if(t.type == itype){
-            return t;
+            if(single){
+                return t;
+            }
+            ret.push(t);
         }
     }
+    if(single){
+        return null;
+    }
+    return ret;
 }
 
 get_types(arr){
@@ -399,17 +407,20 @@ update_tiles(tiles){
     }
 }
 
-checkOverlaping(overlaps, skip, radius, count, type){
-    for(let i in this.open){
+checkOverlaping(in_arr = [], overlaps, skip, radius, count, type){
+    console.log("?nibba?");
+    for(let i in in_arr){
         if(skip > 0){
             skip--;
             continue;
         }
-        let tile = this.open[i];
+        let tile = in_arr[i];
         if(tile.type && tile.type != type)
             continue;
-        let arr = this.get_withinRange(this.open, tile, radius, type);
+        let arr = this.get_withinRange(in_arr, tile, radius, type);
+        console.log(arr.length, JSON.stringify(arr), "ff");
         if(arr.length >= count){
+            //console.log("???");
             let v = this.check_overload(overlaps, arr, radius, count);
             if(v){
                 v = v.slice(0, count);
@@ -448,14 +459,67 @@ check_more_connections(skip, arr, range, count){
     return null;
 }
 
+
+checkOverlaping_v2(in_arr = [], include = [], overlaps, radius, count, type, ignore_list = null){
+    let search_arr = in_arr;
+    if(!ignore_list){
+        ignore_list = {};
+        if(include.length > 0){
+            search_arr = include;
+        }
+    }
+    for(let i in search_arr){
+        let tile = search_arr[i];
+        if(ignore_list[tile.index] || tile.type && tile.type != type){
+            continue;
+        }
+        let arr = this.get_withinRange(in_arr, tile, radius, type);
+        if(arr.length >= count){
+            if(!this.check_includes(arr, include)){
+                console.log('doesnt include the original!');
+                continue;
+            }
+
+            if(overlaps <= 1){
+                console.log(arr.length ,"found ! match!", JSON.stringify(arr));
+                arr = arr.slice(0, count);
+                return this.set_tiles(arr, type);
+            }else{
+                ignore_list[tile.index] = true;
+                console.log("found Arr", overlaps);
+                let found = this.checkOverlaping_v2(arr, include, overlaps - 1, radius, count, type, ignore_list);
+                if(found)
+                    return found;
+            }
+        }
+    }
+    console.log('didnt find anything :(');
+    return null;
+}
+
+check_includes(arr = [], include_arr = []){
+    if(include_arr.length == 0){
+        return true;
+    }
+    console.log(JSON.stringify(arr));
+    for(let i of include_arr){
+        if(!arr.includes(i)){
+            console.log(JSON.stringify(i));
+            return false;
+        }
+    }
+    return true;
+}
+
 get_withinRange(arr, tile, r, type){
+    let ignore_list = {};
     let ret = [];
     ret.push(tile);
     for(let i in arr){
         let t = arr[i];
-        
-        if(t == tile || (t.type && t.type != type)) 
+        if(ignore_list[t.index] || t == tile || (t.type && t.type != type)) 
             continue;
+        ignore_list[t.index] = true;
         let d = this.tile_distance(t, tile);
         if(d <= r){
             t.range = d;
