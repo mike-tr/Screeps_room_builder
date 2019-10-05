@@ -148,7 +148,11 @@ class get_freeSpace {
         buildings = buildings.concat(this.room.find(FIND_STRUCTURES, {
             filter : (s) => s.structureType == STRUCTURE_WALL
         }))
-        buildings.push(this.room.controller);
+        if(this.room.controller)
+        {
+            // this should NEVER ever even happen but well in simulation its possible!
+            buildings.push(this.room.controller);
+        }
         for(let i in buildings){
             let building = buildings[i];
             let pos = building.pos;
