@@ -27,6 +27,11 @@ downsides:
   mess up the "path" for placing building from the outside.
 
 
+the algorithem also generate the room from outside to the inside, rather then from inside out,
+reason being that generating it this way create less of a bunker base, while the other way around it create quite the bunker 
+( the check for short path to the center is basically easily avoided from inside out ).
+
+
 
 
 main.js example.
